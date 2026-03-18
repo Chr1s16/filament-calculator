@@ -1,0 +1,6 @@
+services:
+  filament-calculator:
+    build: .
+    ports:
+      - "5151:80"
+    restart: always
