@@ -18,32 +18,41 @@ The printer usage fee and labour rate are simple defaults that can be changed di
 
 ## Quick Start (Docker)
 
-```bash
-# 1) Build the image
-docker compose build
+The published Docker image is available from GitHub Container Registry (GHCR).
 
-# 2) Start the container
+```bash
 docker compose up -d
-
-# 3) Open in your browser
-# http://YOUR_SERVER_IP:5151
 ```
 
-### Docker Compose
+The included `compose.yaml` pulls the latest published image:
+
+`ghcr.io/chr1s16/filament-calculator:latest`
+
+Then open:
+
+`http://YOUR_SERVER_IP:5151`
+
+### Updating
+
+The GitHub repository is the source of truth. Every push to `main` builds and publishes a new Docker image.
+
+To update an existing deployment:
 
 ```bash
-docker compose up -d --build
+docker compose pull
+docker compose up -d
 ```
 
-Then open the port configured by `compose.yaml`.
+The same Compose file can be copied to another Docker host and deployed without cloning this repository.
 
-### Stop / Start / Logs
+## GitHub Actions
 
-```bash
-docker compose down
-docker compose start
-docker compose logs -f
-```
+Every push to `main` builds the existing `Dockerfile` and publishes the image to GHCR as:
+
+- `ghcr.io/chr1s16/filament-calculator:latest`
+- `ghcr.io/chr1s16/filament-calculator:1.1.0` for the current release
+
+The first published GHCR package may need to be changed to **Public** in the repository's GitHub Packages settings so Docker hosts can pull it without authentication.
 
 ## Local Development (optional)
 
