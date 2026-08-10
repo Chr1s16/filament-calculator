@@ -1,6 +1,9 @@
-# 3D Print Cost Calculator (React + Vite + Tailwind)
+# 3D Print Cost Calculator (v1.1)
 
-A mobile-friendly calculator to estimate the cost of a 3D print job from filament, electricity, printer usage, and labour. Packaged for Docker + Nginx.
+React + Vite + Tailwind calculator for estimating the cost of a 3D print job.
+
+
+A mobile-friendly calculator to estimate the cost of a 3D print job from filament, electricity, printer usage, and labour. Packaged for Docker + Nginx. Docker Compose is included for simple deployment and Dockhand use.
 
 ## Cost calculation
 
@@ -16,11 +19,11 @@ The printer usage fee and labour rate are simple defaults that can be changed di
 ## Quick Start (Docker)
 
 ```bash
-# 1) Build the image (run this inside the project folder)
-docker build -t filament-calculator .
+# 1) Build the image
+docker compose build
 
-# 2) Run the container on port 5151
-docker run -d --name filament-calculator -p 5151:80 filament-calculator
+# 2) Start the container
+docker compose up -d
 
 # 3) Open in your browser
 # http://YOUR_SERVER_IP:5151
@@ -37,16 +40,9 @@ Then open the port configured by `compose.yaml`.
 ### Stop / Start / Logs
 
 ```bash
-docker stop filament-calculator
-docker start filament-calculator
-docker logs -f filament-calculator
-```
-
-### Remove
-
-```bash
-docker rm -f filament-calculator
-docker rmi filament-calculator
+docker compose down
+docker compose start
+docker compose logs -f
 ```
 
 ## Local Development (optional)
