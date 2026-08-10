@@ -1,8 +1,7 @@
 services:
   filament-calculator:
-    build:
-      context: https://github.com/Chr1s16/filament-calculator.git#main
-      dockerfile: Dockerfile
+    image: ghcr.io/chr1s16/filament-calculator:latest
+    container_name: filament-calculator
     ports:
       - "5151:80"
     restart: unless-stopped
