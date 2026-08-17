@@ -1,0 +1,190 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #111827;
+  background: #f5f7fb;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background:
+    radial-gradient(circle at top, rgba(59, 130, 246, 0.08), transparent 32rem),
+    #f5f7fb;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.section {
+  @apply rounded-3xl border border-gray-200/80 bg-white p-5 shadow-sm md:p-6;
+}
+
+.section-heading {
+  @apply mb-5 flex items-start justify-between gap-4;
+}
+
+.section-heading h2 {
+  @apply text-lg font-extrabold tracking-tight text-gray-950;
+}
+
+.section-heading p {
+  @apply mt-1 text-sm text-gray-500;
+}
+
+.field-grid {
+  @apply grid grid-cols-1 gap-4 md:grid-cols-2;
+}
+
+.label {
+  @apply mb-1.5 block text-sm font-semibold text-gray-700;
+}
+
+.input-box {
+  @apply w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3.5 text-lg font-medium text-gray-950 outline-none transition;
+}
+
+.input-box:hover {
+  @apply border-gray-300 bg-white;
+}
+
+.input-box:focus {
+  @apply border-blue-500 bg-white ring-4 ring-blue-500/10;
+}
+
+.input-with-prefix {
+  @apply flex items-center gap-2;
+}
+
+.input-with-prefix > span {
+  @apply flex h-[58px] min-w-[58px] items-center justify-center rounded-2xl border border-gray-200 bg-gray-100 px-3 text-sm font-bold text-gray-600;
+}
+
+.input-with-prefix .input-box {
+  @apply min-w-0;
+}
+
+.currency-control {
+  @apply w-24 shrink-0;
+}
+
+.currency-input {
+  @apply text-center uppercase;
+}
+
+.hint {
+  @apply mt-1.5 text-xs text-gray-400;
+}
+
+.result-card {
+  @apply overflow-hidden rounded-3xl border border-blue-200 bg-white shadow-lg shadow-blue-900/5;
+}
+
+.result-header {
+  @apply flex items-center justify-between gap-4 bg-blue-600 px-5 py-6 text-white md:px-7;
+}
+
+.eyebrow {
+  @apply text-xs font-bold tracking-[0.18em] text-blue-100;
+}
+
+.total {
+  @apply mt-1 text-4xl font-black tracking-tight md:text-5xl;
+}
+
+.total-pill {
+  @apply rounded-full bg-white/15 px-3 py-1.5 text-[10px] font-black tracking-widest text-white ring-1 ring-white/20;
+}
+
+.breakdown {
+  @apply divide-y divide-gray-100 px-5 md:px-7;
+}
+
+.breakdown > div {
+  @apply flex items-center justify-between gap-4 py-4 text-sm;
+}
+
+.breakdown > div > span {
+  @apply font-medium text-gray-600;
+}
+
+.breakdown strong {
+  @apply text-base font-extrabold text-gray-950;
+}
+
+.breakdown small {
+  @apply ml-2 block text-xs font-normal text-gray-400 md:inline;
+}
+
+.result-meta {
+  @apply flex flex-col gap-2 border-t border-gray-100 bg-gray-50 px-5 py-4 text-xs text-gray-500 sm:flex-row sm:justify-between md:px-7;
+}
+
+.result-meta strong {
+  @apply font-bold text-gray-700;
+}
+
+.actions {
+  @apply flex gap-3;
+}
+
+.button {
+  @apply flex-1 rounded-2xl px-4 py-3.5 text-sm font-bold shadow-sm transition active:scale-[0.98];
+}
+
+.button.secondary {
+  @apply border border-gray-200 bg-white text-gray-700 hover:bg-gray-50;
+}
+
+.button.primary {
+  @apply bg-gray-950 text-white hover:bg-gray-800;
+}
+
+.footer-note {
+  @apply pb-2 text-center text-xs leading-5 text-gray-400;
+}
+
+@media (max-width: 520px) {
+  .section-heading {
+    @apply flex-col;
+  }
+
+  .currency-control {
+    @apply w-full;
+  }
+
+  .currency-input {
+    @apply text-left;
+  }
+
+  .total {
+    @apply text-4xl;
+  }
+}
+
+.settings-section {
+  @apply border-blue-100 bg-white/90;
+}
+
+.settings-grid {
+  @apply grid grid-cols-1 gap-4 sm:grid-cols-2;
+}
+
+.select-box {
+  @apply cursor-pointer appearance-auto;
+}
+
+.settings-note {
+  @apply mt-3 text-xs leading-5 text-gray-400;
+}
