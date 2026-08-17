@@ -1,9 +1,11 @@
-name: Build and Publish Docker Image
+name: Test, Build and Publish Docker Image
 
 on:
   push:
     branches:
       - main
+    tags:
+      - "v*.*.*"
 
 permissions:
   contents: read
@@ -17,6 +19,50 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Build Docker image for test
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: filament-calculator:test
+
+      - name: Start container
+        run: |
+          docker run -d \
+            --name filament-calculator-test \
+            -p 8080:80 \
+            filament-calculator:test
+
+      - name: Smoke test
+        run: |
+          for i in {1..30}; do
+            if curl --fail --silent http://localhost:8080/ > /dev/null; then
+              echo "Application is running."
+              exit 0
+            fi
+            sleep 1
+          done
+
+          echo "Application failed to start."
+          docker logs filament-calculator-test
+          exit 1
+
+      - name: Stop test container
+        if: always()
+        run: docker rm -f filament-calculator-test || true
+
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
@@ -24,11 +70,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/chr1s16/filament-calculator
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=tag
+            type=sha,prefix=sha-,format=short
+
+      - name: Build and publish Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          tags: |
-            ghcr.io/chr1s16/filament-calculator:latest
-            ghcr.io/chr1s16/filament-calculator:${{ github.sha }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

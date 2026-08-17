@@ -1,60 +1,65 @@
-# 3D Print Cost Calculator (v1.1)
+# 3D Print Cost Calculator
 
-React + Vite + Tailwind calculator for estimating the cost of a 3D print job.
+A small, fast React + Vite + Tailwind calculator for estimating the real cost of a 3D print.
 
+The goal is intentionally simple: enter a few numbers and get the result instantly. No backend, account, database, or unnecessary configuration.
 
-A mobile-friendly calculator to estimate the cost of a 3D print job from filament, electricity, printer usage, and labour. Packaged for Docker + Nginx. Docker Compose is included for simple deployment and Dockhand use.
+## What it calculates
 
-## Cost calculation
+- **Filament** — spool price, spool weight and grams used.
+- **Electricity** — average printer power, print time and electricity price.
+- **Printer wear** — printer purchase price and estimated lifetime in hours.
+- **Labour** — hourly labour rate and actual hands-on time.
 
-The calculator breaks a print into four costs:
+The total updates immediately in the browser whenever an input changes.
 
-- **Filament**: spool price and weight determine the cost per gram.
-- **Electricity**: average printer power, print time, and electricity price determine energy cost.
-- **Printer usage**: an editable hourly printer usage fee multiplied by print time.
-- **Labour**: an editable hourly labour rate multiplied by the labour time entered for the job.
+### Printer wear
 
-The printer usage fee and labour rate are simple defaults that can be changed directly in the calculator for each job.
+Printer wear is calculated as:
 
-## Quick Start (Docker)
+```text
+printer price / expected lifetime in hours = printer wear per hour
+printer wear per hour × print time = printer wear for the job
+```
 
-The published Docker image is available from GitHub Container Registry (GHCR).
+Example:
+
+```text
+3000 RON / 5000 h = 0.60 RON/h
+0.60 RON/h × 5 h = 3.00 RON printer wear
+```
+
+## Docker
+
+The published image is:
+
+```text
+ghcr.io/chr1s16/filament-calculator:latest
+```
+
+### Docker Compose
 
 ```bash
 docker compose up -d
 ```
 
-The included `compose.yaml` pulls the latest published image:
+The app is available on port `5151`:
 
-`ghcr.io/chr1s16/filament-calculator:latest`
-
-Then open:
-
-`http://YOUR_SERVER_IP:5151`
-
-### Updating
-
-The GitHub repository is the source of truth. Every push to `main` builds and publishes a new Docker image.
-
-To update an existing deployment:
-
-```bash
-docker compose pull
-docker compose up -d
+```text
+http://localhost:5151
 ```
 
-The same Compose file can be copied to another Docker host and deployed without cloning this repository.
+### Docker Run
 
-## GitHub Actions
+```bash
+docker run -d \
+  --name filament-calculator \
+  --restart unless-stopped \
+  -p 5151:80 \
+  ghcr.io/chr1s16/filament-calculator:latest
+```
 
-Every push to `main` builds the existing `Dockerfile` and publishes the image to GHCR as:
-
-- `ghcr.io/chr1s16/filament-calculator:latest`
-- `ghcr.io/chr1s16/filament-calculator:1.1.0` for the current release
-
-The first published GHCR package may need to be changed to **Public** in the repository's GitHub Packages settings so Docker hosts can pull it without authentication.
-
-## Local Development (optional)
+## Local development
 
 Requirements: Node 18+
 
@@ -63,21 +68,17 @@ npm install
 npm run dev
 ```
 
-Then open the printed `http://localhost:5173` URL.
-
-## Inputs
-
-- **Currency symbol**: $, €, £, RON, etc.
-- **Filament price & weight**: price per spool and grams per spool.
-- **Used weight**: grams used for the print.
-- **Power & print time**: average printer power and print duration.
-- **Electricity cost**: cost per kWh.
-- **Printer usage fee**: hourly charge for using the printer.
-- **Labour rate & labour time**: separate hourly labour charge and time spent on the job.
-
-## Rebuilding after source changes
+Build:
 
 ```bash
-docker compose build --no-cache
-docker compose up -d
+npm run build
 ```
+
+## Design principles
+
+- Instant calculation.
+- Minimal number of inputs.
+- No backend.
+- No network requests for calculations.
+- Mobile-friendly.
+- Keep the original calculator simple instead of turning it into a full print-management system.

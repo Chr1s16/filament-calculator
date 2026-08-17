@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 
-function toNumber(v) {
-  const n = parseFloat(v);
-  return Number.isFinite(n) ? n : 0;
+function toNumber(value) {
+  const number = parseFloat(value);
+  return Number.isFinite(number) ? number : 0;
 }
 
 const DEFAULTS = {
@@ -12,11 +12,14 @@ const DEFAULTS = {
   powerWatt: 110,
   printTime: 3,
   electricityCost: 1.3,
-  printerUsageCost: 0.5,
+  printerPrice: 3000,
+  printerLifetime: 5000,
   labourRate: 10,
   labourTime: 0,
   currency: "RON",
 };
+
+const field = (value, setter) => (event) => setter(event.target.value);
 
 export default function App() {
   const [filamentPrice, setFilamentPrice] = useState(DEFAULTS.filamentPrice);
@@ -25,51 +28,68 @@ export default function App() {
   const [powerWatt, setPowerWatt] = useState(DEFAULTS.powerWatt);
   const [printTime, setPrintTime] = useState(DEFAULTS.printTime);
   const [electricityCost, setElectricityCost] = useState(DEFAULTS.electricityCost);
-  const [printerUsageCost, setPrinterUsageCost] = useState(DEFAULTS.printerUsageCost);
+  const [printerPrice, setPrinterPrice] = useState(DEFAULTS.printerPrice);
+  const [printerLifetime, setPrinterLifetime] = useState(DEFAULTS.printerLifetime);
   const [labourRate, setLabourRate] = useState(DEFAULTS.labourRate);
   const [labourTime, setLabourTime] = useState(DEFAULTS.labourTime);
   const [currency, setCurrency] = useState(DEFAULTS.currency);
 
-  const priceNum = toNumber(filamentPrice);
-  const weightNum = toNumber(filamentWeight);
-  const usedNum = toNumber(usedWeight);
-  const wattNum = toNumber(powerWatt);
-  const timeNum = toNumber(printTime);
-  const elecNum = toNumber(electricityCost);
-  const printerUsageNum = toNumber(printerUsageCost);
-  const labourRateNum = toNumber(labourRate);
-  const labourTimeNum = toNumber(labourTime);
+  const values = {
+    filamentPrice: toNumber(filamentPrice),
+    filamentWeight: toNumber(filamentWeight),
+    usedWeight: toNumber(usedWeight),
+    powerWatt: toNumber(powerWatt),
+    printTime: toNumber(printTime),
+    electricityCost: toNumber(electricityCost),
+    printerPrice: toNumber(printerPrice),
+    printerLifetime: toNumber(printerLifetime),
+    labourRate: toNumber(labourRate),
+    labourTime: toNumber(labourTime),
+  };
 
-  const costPerGram = useMemo(() => {
-    if (priceNum <= 0 || weightNum <= 0) return 0;
-    return priceNum / weightNum;
-  }, [priceNum, weightNum]);
+  const calculations = useMemo(() => {
+    const {
+      filamentPrice: price,
+      filamentWeight: spoolWeight,
+      usedWeight: used,
+      powerWatt: watts,
+      printTime: hours,
+      electricityCost: electricity,
+      printerPrice: machinePrice,
+      printerLifetime: lifetime,
+      labourRate: labour,
+      labourTime: labourHours,
+    } = values;
 
-  const filamentCost = useMemo(() => {
-    return costPerGram * Math.max(0, usedNum);
-  }, [costPerGram, usedNum]);
+    const costPerGram =
+      price > 0 && spoolWeight > 0 ? price / spoolWeight : 0;
 
-  const kWhUsed = useMemo(() => {
-    if (wattNum <= 0 || timeNum <= 0) return 0;
-    return (wattNum * timeNum) / 1000;
-  }, [wattNum, timeNum]);
+    const filamentCost = costPerGram * Math.max(0, used);
+    const kWhUsed =
+      watts > 0 && hours > 0 ? (watts * hours) / 1000 : 0;
+    const powerCost = kWhUsed * Math.max(0, electricity);
 
-  const powerCost = useMemo(() => {
-    return kWhUsed * Math.max(0, elecNum);
-  }, [kWhUsed, elecNum]);
+    const printerWearPerHour =
+      machinePrice > 0 && lifetime > 0 ? machinePrice / lifetime : 0;
+    const printerWear = printerWearPerHour * Math.max(0, hours);
 
-  const printerUsageTotal = useMemo(() => {
-    return Math.max(0, printerUsageNum) * Math.max(0, timeNum);
-  }, [printerUsageNum, timeNum]);
+    const labourCost =
+      Math.max(0, labour) * Math.max(0, labourHours);
 
-  const labourCost = useMemo(() => {
-    return Math.max(0, labourRateNum) * Math.max(0, labourTimeNum);
-  }, [labourRateNum, labourTimeNum]);
+    const total =
+      filamentCost + powerCost + printerWear + labourCost;
 
-  const totalCost = useMemo(
-    () => filamentCost + powerCost + printerUsageTotal + labourCost,
-    [filamentCost, powerCost, printerUsageTotal, labourCost]
-  );
+    return {
+      costPerGram,
+      filamentCost,
+      kWhUsed,
+      powerCost,
+      printerWearPerHour,
+      printerWear,
+      labourCost,
+      total,
+    };
+  }, [JSON.stringify(values)]);
 
   const reset = () => {
     setFilamentPrice(DEFAULTS.filamentPrice);
@@ -78,7 +98,8 @@ export default function App() {
     setPowerWatt(DEFAULTS.powerWatt);
     setPrintTime(DEFAULTS.printTime);
     setElectricityCost(DEFAULTS.electricityCost);
-    setPrinterUsageCost(DEFAULTS.printerUsageCost);
+    setPrinterPrice(DEFAULTS.printerPrice);
+    setPrinterLifetime(DEFAULTS.printerLifetime);
     setLabourRate(DEFAULTS.labourRate);
     setLabourTime(DEFAULTS.labourTime);
     setCurrency(DEFAULTS.currency);
@@ -91,178 +112,156 @@ export default function App() {
     setPowerWatt(140);
     setPrintTime(5.5);
     setElectricityCost(1.3);
-    setPrinterUsageCost(0.5);
-    setLabourRate(10);
+    setPrinterPrice(3000);
+    setPrinterLifetime(5000);
+    setLabourRate(30);
     setLabourTime(0.25);
     setCurrency("RON");
   };
 
-  return (
-    <div className="min-h-screen p-4 md:p-6 flex items-center justify-center">
-      <div className="w-full max-w-xl space-y-4">
-        <h1 className="text-3xl font-extrabold text-center">3D Print Cost Calculator</h1>
+  const money = (value, digits = 2) =>
+    `${currency}${value.toFixed(digits)}`;
 
-        <div className="section space-y-4">
-          <div>
-            <label className="label">Currency symbol</label>
-            <input
-              type="text"
-              inputMode="text"
-              maxLength={3}
-              className="input-box w-32 text-center"
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value || "$")}
-            />
+  return (
+    <main className="min-h-screen px-4 py-8 md:px-6 md:py-12">
+      <div className="mx-auto w-full max-w-3xl space-y-5">
+        <header className="text-center">
+          <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-600/20">
+            <span className="text-lg font-black">3D</span>
+          </div>
+          <h1 className="text-3xl font-black tracking-tight text-gray-950 md:text-4xl">
+            3D Print Cost Calculator
+          </h1>
+          <p className="mt-2 text-sm text-gray-500">
+            Costul se actualizează instant pe măsură ce modifici valorile.
+          </p>
+        </header>
+
+        <section className="section">
+          <div className="section-heading">
+            <div>
+              <h2>Print</h2>
+              <p>Material, consum și energie.</p>
+            </div>
+            <div className="currency-control">
+              <label className="label" htmlFor="currency">Monedă</label>
+              <input
+                id="currency"
+                type="text"
+                inputMode="text"
+                maxLength={4}
+                className="input-box currency-input"
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value.toUpperCase() || "RON")}
+              />
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="field-grid">
             <div>
-              <label className="label">Filament price per spool</label>
-              <div className="flex gap-2">
-                <span className="px-3 py-4 rounded-2xl bg-gray-100 border">{currency}</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder="e.g. 25"
-                  value={filamentPrice}
-                  onChange={(e) => setFilamentPrice(e.target.value)}
-                  className="input-box"
-                />
+              <label className="label" htmlFor="filament-price">Preț filament / rolă</label>
+              <div className="input-with-prefix">
+                <span>{currency}</span>
+                <input id="filament-price" type="number" min="0" step="0.01" placeholder="25" value={filamentPrice} onChange={field(filamentPrice, setFilamentPrice)} className="input-box" />
               </div>
             </div>
 
             <div>
-              <label className="label">Spool weight (g)</label>
-              <input
-                type="number"
-                min="1"
-                step="1"
-                placeholder="e.g. 1000"
-                value={filamentWeight}
-                onChange={(e) => setFilamentWeight(e.target.value)}
-                className="input-box"
-              />
+              <label className="label" htmlFor="filament-weight">Greutate rolă (g)</label>
+              <input id="filament-weight" type="number" min="1" step="1" placeholder="1000" value={filamentWeight} onChange={field(filamentWeight, setFilamentWeight)} className="input-box" />
             </div>
 
             <div>
-              <label className="label">Used weight for this print (g)</label>
-              <input
-                type="number"
-                min="0"
-                step="1"
-                placeholder="e.g. 80"
-                value={usedWeight}
-                onChange={(e) => setUsedWeight(e.target.value)}
-                className="input-box"
-              />
+              <label className="label" htmlFor="used-weight">Consum filament (g)</label>
+              <input id="used-weight" type="number" min="0" step="1" placeholder="80" value={usedWeight} onChange={field(usedWeight, setUsedWeight)} className="input-box" />
             </div>
 
             <div>
-              <label className="label">Average printer power (W)</label>
-              <input
-                type="number"
-                min="0"
-                step="1"
-                placeholder="e.g. 140"
-                value={powerWatt}
-                onChange={(e) => setPowerWatt(e.target.value)}
-                className="input-box"
-              />
+              <label className="label" htmlFor="power">Consum imprimantă (W)</label>
+              <input id="power" type="number" min="0" step="1" placeholder="140" value={powerWatt} onChange={field(powerWatt, setPowerWatt)} className="input-box" />
             </div>
 
             <div>
-              <label className="label">Print time (hours)</label>
-              <input
-                type="number"
-                min="0"
-                step="0.1"
-                placeholder="e.g. 5.5"
-                value={printTime}
-                onChange={(e) => setPrintTime(e.target.value)}
-                className="input-box"
-              />
+              <label className="label" htmlFor="print-time">Timp print (ore)</label>
+              <input id="print-time" type="number" min="0" step="0.1" placeholder="5.5" value={printTime} onChange={field(printTime, setPrintTime)} className="input-box" />
             </div>
 
             <div>
-              <label className="label">Electricity cost ({currency}/kWh)</label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="e.g. 0.25"
-                value={electricityCost}
-                onChange={(e) => setElectricityCost(e.target.value)}
-                className="input-box"
-              />
+              <label className="label" htmlFor="electricity">Electricitate ({currency}/kWh)</label>
+              <input id="electricity" type="number" min="0" step="0.01" placeholder="1.30" value={electricityCost} onChange={field(electricityCost, setElectricityCost)} className="input-box" />
             </div>
+          </div>
+        </section>
 
+        <section className="section">
+          <div className="section-heading">
             <div>
-              <label className="label">Printer usage fee ({currency}/hour)</label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="e.g. 0.50"
-                value={printerUsageCost}
-                onChange={(e) => setPrinterUsageCost(e.target.value)}
-                className="input-box"
-              />
-            </div>
-
-            <div>
-              <label className="label">Labour rate ({currency}/hour)</label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="e.g. 10"
-                value={labourRate}
-                onChange={(e) => setLabourRate(e.target.value)}
-                className="input-box"
-              />
-            </div>
-
-            <div>
-              <label className="label">Labour time (hours)</label>
-              <input
-                type="number"
-                min="0"
-                step="0.1"
-                placeholder="e.g. 0.25"
-                value={labourTime}
-                onChange={(e) => setLabourTime(e.target.value)}
-                className="input-box"
-              />
+              <h2>Imprimantă &amp; manoperă</h2>
+              <p>Doar costurile care contează pentru prețul real.</p>
             </div>
           </div>
 
-          <div className="flex gap-3">
-            <button className="button bg-gray-100" onClick={reset}>Reset</button>
-            <button className="button bg-blue-600 text-white" onClick={loadExample}>Load example</button>
+          <div className="field-grid">
+            <div>
+              <label className="label" htmlFor="printer-price">Preț imprimantă ({currency})</label>
+              <input id="printer-price" type="number" min="0" step="50" placeholder="3000" value={printerPrice} onChange={field(printerPrice, setPrinterPrice)} className="input-box" />
+            </div>
+
+            <div>
+              <label className="label" htmlFor="printer-life">Durată de viață (ore)</label>
+              <input id="printer-life" type="number" min="1" step="100" placeholder="5000" value={printerLifetime} onChange={field(printerLifetime, setPrinterLifetime)} className="input-box" />
+            </div>
+
+            <div>
+              <label className="label" htmlFor="labour-rate">Manoperă ({currency}/oră)</label>
+              <input id="labour-rate" type="number" min="0" step="1" placeholder="30" value={labourRate} onChange={field(labourRate, setLabourRate)} className="input-box" />
+            </div>
+
+            <div>
+              <label className="label" htmlFor="labour-time">Timp manoperă (ore)</label>
+              <input id="labour-time" type="number" min="0" step="0.05" placeholder="0.25" value={labourTime} onChange={field(labourTime, setLabourTime)} className="input-box" />
+              <p className="hint">Ex.: 15 minute = 0,25 ore.</p>
+            </div>
           </div>
+        </section>
+
+        <section className="result-card" aria-live="polite">
+          <div className="result-header">
+            <div>
+              <p className="eyebrow">COST TOTAL</p>
+              <div className="total">{money(calculations.total)}</div>
+            </div>
+            <div className="total-pill">LIVE</div>
+          </div>
+
+          <div className="breakdown">
+            <div><span>Filament</span><strong>{money(calculations.filamentCost)}</strong></div>
+            <div><span>Electricitate</span><strong>{money(calculations.powerCost)}</strong></div>
+            <div>
+              <span>
+                Uzură imprimantă
+                <small>{money(calculations.printerWearPerHour, 2)}/oră</small>
+              </span>
+              <strong>{money(calculations.printerWear)}</strong>
+            </div>
+            <div><span>Manoperă</span><strong>{money(calculations.labourCost)}</strong></div>
+          </div>
+
+          <div className="result-meta">
+            <span>Consum energie: <strong>{calculations.kWhUsed.toFixed(3)} kWh</strong></span>
+            <span>Filament: <strong>{money(calculations.costPerGram, 4)}/g</strong></span>
+          </div>
+        </section>
+
+        <div className="actions">
+          <button className="button secondary" onClick={reset}>Reset</button>
+          <button className="button primary" onClick={loadExample}>Încarcă exemplu</button>
         </div>
 
-        <div className="section">
-          <h2 className="text-xl font-bold mb-3">Breakdown</h2>
-          <ul className="space-y-2 text-lg">
-            <li>Cost per gram: <strong>{currency}{costPerGram.toFixed(4)}</strong></li>
-            <li>Filament cost: <strong>{currency}{filamentCost.toFixed(2)}</strong></li>
-            <li>Energy used: <strong>{kWhUsed.toFixed(3)} kWh</strong></li>
-            <li>Power cost: <strong>{currency}{powerCost.toFixed(2)}</strong></li>
-            <li>Printer usage: <strong>{currency}{printerUsageTotal.toFixed(2)}</strong></li>
-            <li>Labour: <strong>{currency}{labourCost.toFixed(2)}</strong></li>
-          </ul>
-          <hr className="my-3" />
-          <div className="text-center text-2xl font-extrabold">
-            Total: <span>{currency}{totalCost.toFixed(2)}</span>
-          </div>
-        </div>
-
-        <p className="text-center text-sm text-gray-500">
-          Printer usage is charged per print hour. Labour is charged separately using the labour time you enter.
+        <p className="footer-note">
+          Toate calculele sunt făcute local în browser. Nu există backend și rezultatul se actualizează instant.
         </p>
       </div>
-    </div>
+    </main>
   );
 }
