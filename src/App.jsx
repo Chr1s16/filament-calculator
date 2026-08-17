@@ -157,7 +157,7 @@ function convertAmount(amount, from, to, rates) {
   if (!Number.isFinite(amount) || from === to) return amount;
   const fromRate = rates[from] || 1;
   const toRate = rates[to] || 1;
-  return (amount / fromRate) * toRate;
+  return Math.round(((amount / fromRate) * toRate + Number.EPSILON) * 100) / 100;
 }
 
 function currencyLabel(currency) {
