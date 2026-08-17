@@ -1,4 +1,4 @@
-name: Build and Publish Docker Image
+name: Test and Publish Docker Image
 
 on:
   push:
@@ -12,7 +12,54 @@ permissions:
   packages: write
 
 jobs:
-  docker:
+  test:
+    name: Test application
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Build Docker image
+        run: docker build -t filament-calculator:test .
+
+      - name: Start container
+        run: |
+          docker run -d \
+            --name filament-calculator-test \
+            -p 8080:80 \
+            filament-calculator:test
+
+      - name: Smoke test
+        run: |
+          for i in {1..30}; do
+            if curl --fail --silent http://localhost:8080/ > /dev/null; then
+              echo "Application is running."
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs filament-calculator-test
+          exit 1
+
+      - name: Cleanup
+        if: always()
+        run: docker rm -f filament-calculator-test || true
+
+  publish:
+    name: Publish Docker image
+    needs: test
     runs-on: ubuntu-latest
 
     steps:
@@ -26,20 +73,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/chr1s16/filament-calculator
-          tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=ref,event=tag
-            type=sha,prefix=sha-,format=short
-
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+      - name: Publish image
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF_NAME}"
+            docker build \
+              -t ghcr.io/chr1s16/filament-calculator:${VERSION} \
+              -t ghcr.io/chr1s16/filament-calculator:latest \
+              .
+            docker push ghcr.io/chr1s16/filament-calculator:${VERSION}
+            docker push ghcr.io/chr1s16/filament-calculator:latest
+          else
+            docker build \
+              -t ghcr.io/chr1s16/filament-calculator:latest \
+              -t ghcr.io/chr1s16/filament-calculator:sha-${GITHUB_SHA::7} \
+              .
+            docker push ghcr.io/chr1s16/filament-calculator:latest
+            docker push ghcr.io/chr1s16/filament-calculator:sha-${GITHUB_SHA::7}
+          fi
