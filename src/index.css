@@ -172,3 +172,19 @@ input {
     @apply text-4xl;
   }
 }
+
+.settings-section {
+  @apply border-blue-100 bg-white/90;
+}
+
+.settings-grid {
+  @apply grid grid-cols-1 gap-4 sm:grid-cols-2;
+}
+
+.select-box {
+  @apply cursor-pointer appearance-auto;
+}
+
+.settings-note {
+  @apply mt-3 text-xs leading-5 text-gray-400;
+}

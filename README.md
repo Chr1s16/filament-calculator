@@ -2,7 +2,7 @@
 
 A small, fast React + Vite + Tailwind calculator for estimating the real cost of a 3D print.
 
-The goal is intentionally simple: enter a few numbers and get the result instantly. No backend, account, database, or unnecessary configuration.
+The goal stays intentionally simple: enter a few numbers and get the result instantly. No account, database, or unnecessary configuration.
 
 ## What it calculates
 
@@ -11,23 +11,19 @@ The goal is intentionally simple: enter a few numbers and get the result instant
 - **Printer wear** — printer purchase price and estimated lifetime in hours.
 - **Labour** — hourly labour rate and actual hands-on time.
 
-The total updates immediately in the browser whenever an input changes.
+## Languages & currency
 
-### Printer wear
+The interface starts in **English** with **USD**. Romanian and other major international languages are available from the language selector. Changing language automatically switches to that language's default representative currency and converts the monetary settings using ECB reference rates.
 
-Printer wear is calculated as:
+The currency can also be changed independently from the currency dropdown.
 
-```text
-printer price / expected lifetime in hours = printer wear per hour
-printer wear per hour × print time = printer wear for the job
-```
+Exchange rates are fetched from the ECB when available and cached locally. A bundled fallback keeps the calculator working when the rate service is unavailable.
 
-Example:
+## Saved settings
 
-```text
-3000 RON / 5000 h = 0.60 RON/h
-0.60 RON/h × 5 h = 3.00 RON printer wear
-```
+Calculator settings, selected language and currency are saved in the browser's `localStorage`. This means they survive browser refreshes, new sessions and Docker container updates without requiring a backend or database.
+
+This is deliberately client-side: a Docker volume would not be useful for per-user settings and would add unnecessary complexity.
 
 ## Docker
 
@@ -78,7 +74,6 @@ npm run build
 
 - Instant calculation.
 - Minimal number of inputs.
-- No backend.
-- No network requests for calculations.
-- Mobile-friendly.
-- Keep the original calculator simple instead of turning it into a full print-management system.
+- No account or backend required.
+- Settings persist locally.
+- International language and currency support without turning the calculator into an overcomplicated app.
