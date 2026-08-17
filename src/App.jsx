@@ -169,6 +169,7 @@ export default function App() {
   const [settings, setSettings] = useState(loadSavedSettings);
   const [rates, setRates] = useState(loadSavedRates);
   const [ratesDate, setRatesDate] = useState(null);
+  const [settingsReady, setSettingsReady] = useState(false);
 
   const language = getLanguage(settings.language);
   const strings = TRANSLATIONS[language.code] || TRANSLATIONS.en;
@@ -181,12 +182,53 @@ export default function App() {
   };
 
   useEffect(() => {
+    let cancelled = false;
+
+    fetch("/api/settings")
+      .then((response) => {
+        if (!response.ok) throw new Error("Settings request failed");
+        return response.json();
+      })
+      .then((saved) => {
+        if (cancelled) return;
+
+        if (saved && typeof saved === "object" && Object.keys(saved).length > 0) {
+          setSettings((current) => ({ ...current, ...saved }));
+        }
+      })
+      .catch(() => {
+        // If server storage is unavailable, keep the locally cached settings.
+      })
+      .finally(() => {
+        if (!cancelled) setSettingsReady(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!settingsReady) return;
+
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
     } catch {
-      // Private browsing or disabled storage: the calculator still works.
+      // Local cache is optional; server storage remains authoritative.
     }
-  }, [settings]);
+
+    const timer = setTimeout(() => {
+      fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(settings),
+      }).catch(() => {
+        // The calculator keeps working even if persistence is temporarily unavailable.
+      });
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [settings, settingsReady]);
 
   useEffect(() => {
     const controller = new AbortController();

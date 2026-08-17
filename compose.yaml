@@ -2,11 +2,12 @@ services:
   filament-calculator:
     image: ghcr.io/chr1s16/filament-calculator:latest
     container_name: filament-calculator
-    restart: unless-stopped
     ports:
       - "5151:80"
     volumes:
-      - filament_calculator_data:/data
+      - filament-calculator-data:/data
+    restart: unless-stopped
 
 volumes:
-  filament_calculator_data:
+  filament-calculator-data:
+    name: filament-calculator-data
